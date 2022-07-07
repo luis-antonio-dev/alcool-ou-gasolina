@@ -5,12 +5,32 @@ import * as Location from 'expo-location';
 import MapView from 'react-native-maps';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
+enum BetterCombustion {
+  None = 1,
+  Gas,
+  Ethanol
+}
+
 export default function App() {
   const mapRef = useRef<MapView>(null);
+
+  const [gasPrice, setGasPrice] = useState(0);
+  const [ethanolPrice, setEthanolPrice] = useState(0);
+
+  const [betterCombustion, setBetterCombustion] = useState(BetterCombustion.None);
 
   useEffect(() => {
     handleAccessLocationPermission();
   }, []);
+
+  function handleBetterCombustion() {
+    setBetterCombustion(getBetterCombustion(gasPrice, ethanolPrice))
+  }
+
+  function getBetterCombustion(gasPrice: number, ethanolPrice: number): BetterCombustion {
+    console.log(gasPrice / ethanolPrice)
+    return ethanolPrice / gasPrice <= 0.70 ? BetterCombustion.Ethanol : BetterCombustion.Gas
+  }
 
   async function handleAccessLocationPermission() {
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -46,27 +66,23 @@ export default function App() {
         <Text style={styles.title}>Informe a tabela de preços</Text>
 
         <View style={styles.combusWrapper}>
-          <View style={styles.combusItem}>
+          <View style={[styles.combusItem, betterCombustion === BetterCombustion.Gas && styles.betterCombustion]}>
             <View style={styles.header}>
-
               <MaterialCommunityIcons name="gas-station" size={25} color="red" />
-              <TextInput style={styles.input} placeholder='R$ 0,00' keyboardType='number-pad' />
-
+              <TextInput placeholder='R$ 0,00' keyboardType='number-pad' onChangeText={value => setGasPrice(parseFloat(value))} />
             </View>
-            <Text>Gasolina</Text>
+            <Text style={[betterCombustion === BetterCombustion.Gas && styles.betterCombustionText]}>Gasolina</Text>
           </View>
-          <View style={styles.combusItem}>
+          <View style={[styles.combusItem, betterCombustion === BetterCombustion.Ethanol && styles.betterCombustion]}>
             <View style={styles.header}>
-
               <MaterialCommunityIcons name="gas-station" size={25} color="red" />
-              <TextInput style={styles.input} placeholder='R$ 0,00' keyboardType='number-pad' />
-
+              <TextInput style={styles.input} placeholder='R$ 0,00' keyboardType='number-pad' onChangeText={value => setEthanolPrice(parseFloat(value))} />
             </View>
-            <Text>Etanol</Text>
+            <Text style={[betterCombustion === BetterCombustion.Ethanol && styles.betterCombustionText]}>Etanol</Text>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.button}>
+        <TouchableOpacity style={styles.button} onPress={() => handleBetterCombustion()}>
           <Text style={styles.calcularText}>Calcular</Text>
         </TouchableOpacity>
       </View>
@@ -107,7 +123,7 @@ const styles = StyleSheet.create({
   combusWrapper: {
     flexDirection: 'row',
     width: '100%',
-    height: '20%',
+    height: '25%',
   },
   combusItem: {
     width: '50%',
@@ -135,10 +151,12 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   input: {
     fontSize: 16,
     marginLeft: 10,
+    height: 40,
   },
   button: {
     width: '100%',
@@ -152,6 +170,12 @@ const styles = StyleSheet.create({
   calcularText: {
     color: '#fff',
     fontSize: 16,
+  },
+  betterCombustion: {
+    backgroundColor: '#33f533'
+  },
+  betterCombustionText: {
+    color: '#fff'
   }
 });
 
