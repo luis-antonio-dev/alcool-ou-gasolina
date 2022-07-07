@@ -28,7 +28,6 @@ export default function App() {
   }
 
   function getBetterCombustion(gasPrice: number, ethanolPrice: number): BetterCombustion {
-    console.log(gasPrice / ethanolPrice)
     return ethanolPrice / gasPrice <= 0.70 ? BetterCombustion.Ethanol : BetterCombustion.Gas
   }
 
