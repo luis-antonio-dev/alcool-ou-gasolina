@@ -1,18 +1,47 @@
-import { Dimensions, StyleSheet, View, Text, TextInput } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Dimensions, StyleSheet, View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar'
+import * as Location from 'expo-location';
 import MapView from 'react-native-maps';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 export default function App() {
+  const mapRef = useRef<MapView>(null);
+
+  useEffect(() => {
+    handleAccessLocationPermission();
+  }, []);
+
+  async function handleAccessLocationPermission() {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') return;
+
+
+    const { coords: { latitude, longitude } } = await Location.getCurrentPositionAsync({});
+    handleNavigateToUserLocation(latitude, longitude);
+  }
+
+  function handleNavigateToUserLocation(latitude: number, longitude: number) {
+    if (!mapRef.current) return;
+
+    mapRef.current.animateToRegion({
+      latitude,
+      longitude,
+      latitudeDelta: 0.0100,
+      longitudeDelta: 0.0101,
+    })
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar style='dark' backgroundColor='#fff' />
-      <MapView style={styles.map} initialRegion={{
-        latitude: -9.9329861,
-        longitude: -67.8166505,
+      <MapView style={styles.map} ref={mapRef} initialRegion={{
+        latitude: 0,
+        longitude: 0,
         latitudeDelta: 0.0940,
         longitudeDelta: 0.0421,
-      }} />
+      }}
+        showsUserLocation />
       <View style={styles.modal}>
         <Text style={styles.title}>Informe a tabela de preços</Text>
 
@@ -36,6 +65,10 @@ export default function App() {
             <Text>Etanol</Text>
           </View>
         </View>
+
+        <TouchableOpacity style={styles.button}>
+          <Text style={styles.calcularText}>Calcular</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -55,7 +88,7 @@ const styles = StyleSheet.create({
   },
   modal: {
     width: '100%',
-    height: Dimensions.get('screen').height * 50 / 100,
+    height: Dimensions.get('screen').height * 40 / 100,
     position: 'absolute',
     bottom: 0,
     zIndex: 5,
@@ -64,19 +97,22 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 15,
     paddingTop: 20,
     paddingHorizontal: 15,
+    alignItems: 'flex-start'
   },
   title: {
     fontSize: 24,
     fontFamily: 'Roboto',
+    marginBottom: 10,
   },
   combusWrapper: {
     flexDirection: 'row',
     width: '100%',
-    flex: 1,
+    height: '20%',
   },
   combusItem: {
     width: '50%',
-    height: '20%',
+    height: '100%',
+    borderRadius: 7,
 
     backgroundColor: '#fff',
 
@@ -103,6 +139,19 @@ const styles = StyleSheet.create({
   input: {
     fontSize: 16,
     marginLeft: 10,
+  },
+  button: {
+    width: '100%',
+    height: 40,
+    backgroundColor: 'red',
+    borderRadius: 7,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 40,
+  },
+  calcularText: {
+    color: '#fff',
+    fontSize: 16,
   }
 });
 
